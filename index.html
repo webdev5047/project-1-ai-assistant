@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEright Automation - AI Assistant Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 280px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; padding: 20px; }
+        .sidebar h2 { font-size: 1.2rem; color: #38bdf8; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar .menu-item { padding: 12px 15px; background: #334155; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.3s; font-size: 0.95rem; }
+        .sidebar .menu-item:hover { background: #0284c7; }
+        .main-container { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
+        .header { padding: 20px 30px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.4rem; font-weight: 600; }
+        .status-badge { background: #22c55e; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .chat-box { flex: 1; padding: 20px 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 75%; padding: 15px; border-radius: 12px; line-height: 1.5; font-size: 0.95rem; }
+        .user-msg { background: #0284c7; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .ai-msg { background: #1e293b; color: #e2e8f0; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #334155; }
+        .input-area { padding: 20px 30px; background: #1e293b; border-top: 1px solid #334155; display: flex; gap: 15px; }
+        .input-area input { flex: 1; padding: 14px 20px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
+        .input-area input:focus { border-color: #0284c7; }
+        .input-area button { padding: 0 25px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .input-area button:hover { background: #0369a1; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>BEright Dashboard</h2>
+        <div class="menu-item">🤖 Project 1: AI Assistant</div>
+        <div class="menu-item" style="opacity: 0.5;">📧 Project 2: Email Agent</div>
+        <div class="menu-item" style="opacity: 0.5;">📊 Project 3: Sheets Agent</div>
+    </div>
+
+    <div class="main-container">
+        <div class="header">
+            <h1>Personal AI Assistant Console</h1>
+            <div class="status-badge" id="status">System Online</div>
+        </div>
+
+        <div class="chat-box" id="chatBox">
+            <div class="message ai-msg">হ্যালো! আমি আপনার BEright অটোমেশন এআই অ্যাসিস্ট্যান্ট। আজ আপনাকে কীভাবে সাহায্য করতে পারি?</div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="আপনার প্রম্পট এখানে লিখুন..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">পাঠিয়ে দিন</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const inputField = document.getElementById('userInput');
+            const chatBox = document.getElementById('chatBox');
+            const promptText = inputField.value.trim();
+
+            if (!promptText) return;
+
+            // User Message Append
+            chatBox.innerHTML += `<div class="message user-msg">${promptText}</div>`;
+            inputField.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                // FastAPI Backend Call (Local or Server URL)
+                const response = await fetch('http://127.0.0.1:8000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptText })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    chatBox.innerHTML += `<div class="message ai-msg">${data.ai_response}</div>`;
+                } else {
+                    chatBox.innerHTML += `<div class="message ai-msg" style="color: #ef4444;">এরর: ${data.message}</div>`;
+                }
+            } catch (error) {
+                chatBox.innerHTML += `<div class="message ai-msg" style="color: #ef4444;">সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি! ব্যাকএন্ড রান আছে তো?</div>`;
+            }
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
